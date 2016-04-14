@@ -1145,7 +1145,7 @@ serverConsole() {
   # Make sure that the world's directory exists.
   WORLD_DIR="$WORLDS_LOCATION/$1"
   # Follow the console output buffer file.
-  sh -c "tail --pid=\$$ -f '$WORLD_DIR/console.out'" &
+  tail -f --pid=$$ $WORLD_DIR/console.out &
   # Copy user input to the console input buffer file.
   while read LINE; do
     echo "$LINE" >> $WORLD_DIR/console.in
@@ -1209,9 +1209,9 @@ start() {
     exit 1
   fi
   # Start the server.
-  sh -c "tail -f --pid=\$$ '$WORLD_DIR/console.in' | {
-    $SERVER_COMMAND mscs-world='$1' > '$WORLD_DIR/console.out' 2>&1; kill \$$;
-    }" &
+  sh -c "tail -f --pid=\$$ $WORLD_DIR/console.in | {
+    $SERVER_COMMAND mscs-world=$1 > $WORLD_DIR/console.out 2>&1; kill \$$;
+  }" &
   # Verify the server is running.
   if [ $? -ne 0 ]; then
     printf "Error starting the server.\n"
@@ -1446,19 +1446,13 @@ overviewer() {
     else
       sendCommand $1 "say The world is about to be mapped with Overviewer."
     fi
-    sendCommand $1 "save-all"
-    sendCommand $1 "save-off"
-    sleep 20
-    # Run a backup of the world.
-    worldBackup $1
-    sendCommand $1 "save-on"
   fi
   # Make sure the maps directory exists.
   mkdir -p "$MAPS_LOCATION/$1"
   # Make sure the Minecraft client is available.
   updateClientSoftware "$1"
   # Make sure that the world files are actually there before mapping.
-  if [ -e "$WORLDS_LOCATION/$1/server.properties" ]; then
+  if [ -e "$BACKUP_LOCATION/$1/server.properties" ]; then
     # Check for Overviewer settings file.
     if [ ! -e "$WORLDS_LOCATION/$1/overviewer-settings.py" ]; then
       touch "$WORLDS_LOCATION/$1/overviewer-settings.py"
